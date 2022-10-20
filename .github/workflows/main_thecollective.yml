@@ -38,5 +38,5 @@ jobs:
         with:
           app-name: 'TheCollective'
           slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output/API/TheCollectiveAPI'
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/API/TheCollectiveAPI/output'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0F276F3D61A94331984F2AD30C619846 }}
