@@ -23,7 +23,7 @@ namespace TheCollectiveAPI
         }
 
         [FunctionName("Scan")]
-        public void Run([IoTHubTrigger("device/scan", Connection = "")]EventData message, ILogger log)
+        public void Run([IoTHubTrigger("device/scan", Connection = "HostName=TeamRattTheCollective.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=cxiMDZeiT7sW8WJK0hf4V7petHzIOLemc7c+mtHICwI=")]EventData message, ILogger log)
         {
             log.LogInformation($"C# IoT Hub trigger function processed a message: {Encoding.UTF8.GetString(message.Body.ToArray())}");
         }
