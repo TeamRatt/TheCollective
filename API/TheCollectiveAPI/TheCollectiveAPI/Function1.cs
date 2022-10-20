@@ -1,16 +1,12 @@
 using IoTHubTrigger = Microsoft.Azure.WebJobs.EventHubTriggerAttribute;
 
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Azure.EventHubs;
 using System.Text;
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage;
 using System.Threading.Tasks;
 using System;
 using Azure.Messaging.EventHubs;
