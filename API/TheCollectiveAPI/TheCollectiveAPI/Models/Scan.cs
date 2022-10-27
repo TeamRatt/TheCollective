@@ -17,6 +17,9 @@ namespace TheCollectiveAPI.Models
 
         [JsonProperty("ScannedId")]
         public string ScannedId { get; set; }
+
+        [JsonProperty("CompanyName")]
+        public string CompanyName { get; set; }
         
     }
 }

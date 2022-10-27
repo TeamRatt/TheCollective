@@ -13,6 +13,9 @@ using Azure.Messaging.EventHubs;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage;
 using TheCollectiveAPI.TableEntities;
+using Newtonsoft.Json;
+using System.IO;
+using TheCollectiveAPI.Models;
 
 namespace TheCollectiveAPI
 {
@@ -123,6 +126,48 @@ namespace TheCollectiveAPI
                     };
 
                     return new OkObjectResult(listKeepalive);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.ToString());
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
+
+
+        [FunctionName("AddScan")]
+        public async Task<IActionResult> CreateBike(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/scans")] HttpRequest req,
+            ILogger log)
+        {
+
+            using (HttpClient client = GetClient())
+            {
+                try
+                {
+                    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                    Scan scan = JsonConvert.DeserializeObject<Scan>(requestBody);
+
+                    string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
+                    CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+                    CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                    CloudTable table = cloudTableClient.GetTableReference("Scnas");
+
+                    ScanEntity scanEntity = new ScanEntity()
+                    {
+                        MacAddress = scan.MacAddress,
+                        ScannedId = scan.ScannedId,
+                        CompanyName = scan.CompanyName,
+                        PartitionKey = scan.CompanyName,
+                        RowKey = System.Guid.NewGuid().ToString(),
+                    };
+
+
+                    TableOperation insertOperation = TableOperation.Insert(scanEntity);
+                    await table.ExecuteAsync(insertOperation);
+
+                    return new OkObjectResult(scan);
                 }
                 catch (Exception ex)
                 {

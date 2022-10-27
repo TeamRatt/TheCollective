@@ -20,6 +20,7 @@ namespace TheCollectiveAPI.TableEntities
         public string MacAddress { get; set; }
 
         public string ScannedId { get; set; }
+        public string CompanyName { get; set; }
 
     }
 }
