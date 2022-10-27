@@ -2,12 +2,9 @@
 using Newtonsoft.Json;
 
 namespace TheCollectiveAPI.Models
-
-
 {
     public class LastScanHoes
     {
-
         [JsonProperty("hoes_id")]
         public string HoesId { get; set; }
 
@@ -17,6 +14,8 @@ namespace TheCollectiveAPI.Models
         [JsonProperty("last_scan")]
         public DateTime lastScan { get; set; }
 
+        [JsonProperty("location")]
+        public string Location { get; set; }
     }
 }
 

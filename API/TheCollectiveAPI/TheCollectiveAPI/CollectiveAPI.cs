@@ -181,12 +181,59 @@ namespace TheCollectiveAPI
                         var queryResult2 = await table.ExecuteQuerySegmentedAsync(rangeQuery2, null);
                         queryResult2.Results.Sort((b, a) => a.Timestamp.CompareTo(b.Timestamp));
                         listScansTemp.Scans = queryResult2.Results;
-                        listScans.AddRange(listScansTemp.Scans.Take(1));
-                        //nog filteren op enkel de hoogste tijd. 
-                        
+                        listScans.AddRange(listScansTemp.Scans.Take(1));                        
                     };
 
-                    return new OkObjectResult(listScans);
+
+
+                    ListDevices listDevicesTemp = new ListDevices() { Devices = null };
+                    List<DeviceEntity> listDevices = new List<DeviceEntity>();
+                    table = cloudTableClient.GetTableReference("Devices");
+                    foreach(var scan in listScans)
+                    {
+                        TableQuery<DeviceEntity> rangeQueryDevice = new TableQuery<DeviceEntity>();
+                        rangeQueryDevice.Where(TableQuery.GenerateFilterCondition("MacAddress", QueryComparisons.Equal, scan.MacAddress));
+                        var queryResultDevice = await table.ExecuteQuerySegmentedAsync(rangeQueryDevice, null);
+                        listDevicesTemp.Devices = queryResultDevice.Results;
+                        listDevices.AddRange(listDevicesTemp.Devices.Take(1));
+                    }
+
+                    List<LastScanHoes> listLastScanHoes = new List<LastScanHoes>();
+                    string hoesid, companyname, location;
+                    DateTime lastscan;
+                    foreach(var hoes in listHoezen.listHoezen)
+                    {
+                        hoesid = hoes.HoesId;
+                        companyname = hoes.CompanyName;
+                        ScanEntity tempscan = new ScanEntity();
+                        location = "";
+                        lastscan = DateTime.MinValue;
+                        foreach(var scan in listScans)
+                        {
+                            if (scan.ScannedId == hoes.HoesId) 
+                            { 
+                                lastscan = scan.Timestamp.DateTime;
+                                tempscan = scan;
+                            }
+                        }
+                        foreach(var device in listDevices) 
+                        {
+                            if (device.MacAddress == tempscan.MacAddress)
+                            {
+                                location = device.Location;
+                            }
+                        }
+
+                        LastScanHoes tempScanhoes = new LastScanHoes()
+                        {
+                            HoesId = hoesid,
+                            CompanyName = companyname,
+                            Location = location,
+                            lastScan = lastscan
+                        };
+                        listLastScanHoes.Add(tempScanhoes);
+                    }
+                    return new OkObjectResult(listLastScanHoes);
 
                 }
                 catch (Exception ex)
