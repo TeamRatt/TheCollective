@@ -137,7 +137,7 @@ namespace TheCollectiveAPI
 
 
         [FunctionName("AddScan")]
-        public async Task<IActionResult> CreateBike(
+        public async Task<IActionResult> AddScan(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/scans")] HttpRequest req,
             ILogger log)
         {
@@ -152,7 +152,7 @@ namespace TheCollectiveAPI
                     string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
                     CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
                     CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
-                    CloudTable table = cloudTableClient.GetTableReference("Scnas");
+                    CloudTable table = cloudTableClient.GetTableReference("Scans");
 
                     ScanEntity scanEntity = new ScanEntity()
                     {
