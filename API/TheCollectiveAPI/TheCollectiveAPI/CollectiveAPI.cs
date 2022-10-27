@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System.IO;
 using TheCollectiveAPI.Models;
 using System.Collections.Generic;
+using static System.Net.WebRequestMethods;
 
 namespace TheCollectiveAPI
 {
