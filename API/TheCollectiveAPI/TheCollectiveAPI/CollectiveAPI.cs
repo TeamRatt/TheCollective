@@ -15,6 +15,7 @@ using System.IO;
 using TheCollectiveAPI.Models;
 using System.Collections.Generic;
 using static System.Net.WebRequestMethods;
+using System.Linq;
 
 namespace TheCollectiveAPI
 {
@@ -167,23 +168,22 @@ namespace TheCollectiveAPI
                     //We overlopen elke hoes van de lijst van de hoezen van bedrijf x
                     // => vervolgens doen we query naar table
 
-                    ListScans listScans = new ListScans() { Scans = null };
-
+                    ListScans listScansTemp = new ListScans() { Scans = null };
+                    List<ScanEntity> listScans = new List<ScanEntity>();
                     table = cloudTableClient.GetTableReference("Scans");
 
 
                     foreach (var hoes in listHoezen.listHoezen)
                     {
-
                         TableQuery<ScanEntity> rangeQuery2 = new TableQuery<ScanEntity>();
 
                         rangeQuery2.Where(TableQuery.GenerateFilterCondition("ScannedId", QueryComparisons.Equal, hoes.HoesId));
                         var queryResult2 = await table.ExecuteQuerySegmentedAsync(rangeQuery2, null);
-
-                        foreach (ScanEntity scan in queryResult2.Results)
-                        {
-                            listScans.Scans.Add(scan);
-                        }
+                        queryResult2.Results.Sort((b, a) => a.Timestamp.CompareTo(b.Timestamp));
+                        listScansTemp.Scans = queryResult2.Results;
+                        listScans.AddRange(listScansTemp.Scans.Take(1));
+                        //nog filteren op enkel de hoogste tijd. 
+                        
                     };
 
                     return new OkObjectResult(listScans);
