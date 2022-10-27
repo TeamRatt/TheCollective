@@ -16,6 +16,7 @@ using TheCollectiveAPI.TableEntities;
 using Newtonsoft.Json;
 using System.IO;
 using TheCollectiveAPI.Models;
+using System.Collections.Generic;
 
 namespace TheCollectiveAPI
 {
@@ -138,7 +139,8 @@ namespace TheCollectiveAPI
         //Geef alle hoezen weer.
         [FunctionName("GetHoezen")]
         public async Task<IActionResult> GetHoezen(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/hoezen")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/hoezen/{companyName}")] HttpRequest req,
+            string companyName,
             ILogger log)
         {
             using (HttpClient client = GetClient())
@@ -152,6 +154,9 @@ namespace TheCollectiveAPI
 
                     TableQuery<HoesEntity> rangeQuery = new TableQuery<HoesEntity>();
 
+                    rangeQuery.Where(TableQuery.GenerateFilterCondition("CompanyName", QueryComparisons.Equal, companyName));
+
+
                     var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
 
                     ListHoezen listHoezen = new ListHoezen()
@@ -159,7 +164,32 @@ namespace TheCollectiveAPI
                         listHoezen = queryResult.Results,
                     };
 
-                    return new OkObjectResult(listHoezen);
+                    //return new OkObjectResult(listHoezen);
+
+                    //We overlopen elke hoes van de lijst van de hoezen van bedrijf x
+                    // => vervolgens doen we query naar table
+
+                    ListScans listScans = new ListScans() { Scans = null };
+
+                    table = cloudTableClient.GetTableReference("Scans");
+
+
+                    foreach (var hoes in listHoezen.listHoezen)
+                    {
+               
+                        TableQuery<ScanEntity> rangeQuery2 = new TableQuery<ScanEntity>();
+
+                        rangeQuery2.Where(TableQuery.GenerateFilterCondition("ScannedId", QueryComparisons.Equal, hoes.HoesId));
+                        var queryResult2 = await table.ExecuteQuerySegmentedAsync(rangeQuery2, null);
+
+                        foreach (ScanEntity scan in queryResult2.Results)
+                        {
+                            listScans.Scans.Add(scan);
+                        }                                                       
+                    };
+
+                    return new OkObjectResult(listScans);
+
                 }
                 catch (Exception ex)
                 {
