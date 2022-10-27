@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TheCollectiveAPI.Models
 {
-    internal class Hoezen
+    internal class Hoes
     {
         [JsonProperty("hoes_id")]
         public string HoesId { get; set; }
