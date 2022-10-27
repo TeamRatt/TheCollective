@@ -22,13 +22,13 @@ namespace TheCollectiveAPI
             return client;
         }
 
-        [FunctionName("Scan")]
+        /*[FunctionName("Scan")]
         public void Run([IoTHubTrigger("device/scan", Connection = "HostName=TeamRattTheCollective.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=cxiMDZeiT7sW8WJK0hf4V7petHzIOLemc7c+mtHICwI=")]EventData message, ILogger log)
         {
             log.LogInformation($"C# IoT Hub trigger function processed a message: {Encoding.UTF8.GetString(message.Body.ToArray())}");
-        }
+        }*/
 
-        [FunctionName("GetAllCategoriesPortal")]
+            [FunctionName("GetAllCategoriesPortal")]
         public async Task<IActionResult> GetAllCategoriesP(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/categoriesportal")] HttpRequest req,
             ILogger log)
