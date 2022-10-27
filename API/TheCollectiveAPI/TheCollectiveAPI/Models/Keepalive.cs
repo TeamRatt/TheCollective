@@ -7,16 +7,12 @@ using System.Threading.Tasks;
 
 namespace TheCollectiveAPI.Models
 {
-    internal class Scans
+    internal class Keepalive
     {
         [JsonProperty("MacAddress")]
         public string MacAddress { get; set; }
 
         [JsonProperty("Timestamp")]
         public DateTime Timestamp { get; set; }
-
-        [JsonProperty("ScannedId")]
-        public string ScannedId { get; set; }
-        
     }
 }
