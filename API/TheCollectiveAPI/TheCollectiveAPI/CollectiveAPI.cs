@@ -245,7 +245,45 @@ namespace TheCollectiveAPI
         }
 
 
+        //Geef alle hoezen weer.
+        [FunctionName("GetCompanyNames")]
+        public async Task<IActionResult> GetCompanynames(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/companynames")] HttpRequest req,
+            ILogger log)
+        {
+            using (HttpClient client = GetClient())
+            {
+                try
+                {
+                    string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
+                    CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+                    CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                    CloudTable table = cloudTableClient.GetTableReference("Devices");
 
+                    TableQuery<DeviceEntity> rangeQuery = new TableQuery<DeviceEntity>();
+
+                    var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
+
+                    ListDevices listDevices = new ListDevices()
+                    {
+                        Devices = queryResult.Results,
+                    };
+
+                    List<string> listCompanyNames = new List<string>();
+                    foreach (DeviceEntity device in queryResult.Results)
+                    {
+                        if (!listCompanyNames.Contains(device.CompanyName.ToString())) { listCompanyNames.Add(device.CompanyName.ToString()); }
+                    }
+
+                    return new OkObjectResult(listCompanyNames);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.ToString());
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
 
         [FunctionName("AddScan")]
         public async Task<IActionResult> AddScan(
