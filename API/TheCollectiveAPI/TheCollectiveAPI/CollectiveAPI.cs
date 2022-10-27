@@ -135,6 +135,42 @@ namespace TheCollectiveAPI
             }
         }
 
+        //Geef alle hoezen weer.
+        [FunctionName("GetHoezen")]
+        public async Task<IActionResult> GetHoezen(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/hoezen")] HttpRequest req,
+            ILogger log)
+        {
+            using (HttpClient client = GetClient())
+            {
+                try
+                {
+                    string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
+                    CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+                    CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                    CloudTable table = cloudTableClient.GetTableReference("Hoezen");
+
+                    TableQuery<HoesEntity> rangeQuery = new TableQuery<HoesEntity>();
+
+                    var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
+
+                    ListHoezen listHoezen = new ListHoezen()
+                    {
+                        listHoezen = queryResult.Results,
+                    };
+
+                    return new OkObjectResult(listHoezen);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.ToString());
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
+
+
+
 
         [FunctionName("AddScan")]
         public async Task<IActionResult> AddScan(
