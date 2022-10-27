@@ -1,5 +1,3 @@
-using IoTHubTrigger = Microsoft.Azure.WebJobs.EventHubTriggerAttribute;
-
 using Microsoft.Azure.WebJobs;
 using System.Text;
 using System.Net.Http;
@@ -9,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Threading.Tasks;
 using System;
-using Azure.Messaging.EventHubs;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.WindowsAzure.Storage;
 using TheCollectiveAPI.TableEntities;
@@ -177,7 +174,7 @@ namespace TheCollectiveAPI
 
                     foreach (var hoes in listHoezen.listHoezen)
                     {
-               
+
                         TableQuery<ScanEntity> rangeQuery2 = new TableQuery<ScanEntity>();
 
                         rangeQuery2.Where(TableQuery.GenerateFilterCondition("ScannedId", QueryComparisons.Equal, hoes.HoesId));
@@ -186,7 +183,7 @@ namespace TheCollectiveAPI
                         foreach (ScanEntity scan in queryResult2.Results)
                         {
                             listScans.Scans.Add(scan);
-                        }                                                       
+                        }
                     };
 
                     return new OkObjectResult(listScans);

@@ -17,7 +17,7 @@ namespace TheCollectiveAPI.Models
 
         [JsonProperty("Location")]
         public string Location { get; set; }
-        
+
         [JsonProperty("Timestamp")]
         public DateTime Timestamp { get; set; }
     }

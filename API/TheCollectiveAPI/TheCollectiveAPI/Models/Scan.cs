@@ -20,6 +20,6 @@ namespace TheCollectiveAPI.Models
 
         [JsonProperty("CompanyName")]
         public string CompanyName { get; set; }
-        
+
     }
 }
