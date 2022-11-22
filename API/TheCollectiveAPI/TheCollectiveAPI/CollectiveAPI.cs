@@ -325,5 +325,41 @@ namespace TheCollectiveAPI
                 }
             }
         }
+
+        [FunctionName("GetScanFromDevice")]
+        public async Task<IActionResult> GetScanFromDevice(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/scans/{deviceid}")] HttpRequest req,
+            string deviceid,
+            ILogger log)
+        {
+
+            using (HttpClient client = GetClient())
+            {
+                try
+                {
+                    string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
+                    CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+                    CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                    CloudTable table = cloudTableClient.GetTableReference("Scans");
+
+                    TableQuery<ScanEntity> rangeQuery = new TableQuery<ScanEntity>();
+
+                    rangeQuery.Where(TableQuery.GenerateFilterCondition("MacAddress", QueryComparisons.Equal, deviceid));
+                    var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
+
+                    ListScans listScans = new ListScans()
+                    {
+                        Scans = queryResult.Results,
+                    };
+
+                    return new OkObjectResult(listScans);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.ToString());
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
     }
 }
