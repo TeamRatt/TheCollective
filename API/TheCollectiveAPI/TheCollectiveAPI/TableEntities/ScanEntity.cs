@@ -21,6 +21,8 @@ namespace TheCollectiveAPI.TableEntities
 
         public string ScannedId { get; set; }
         public string CompanyName { get; set; }
+        public bool InOut { get; set; }
+        public Guid FacturationId { get; set; }
 
     }
 }

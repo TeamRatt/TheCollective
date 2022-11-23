@@ -21,6 +21,12 @@ namespace TheCollectiveAPI.Models
         [JsonProperty("CompanyName")]
         public string CompanyName { get; set; }
 
+        [JsonProperty("InOut")]
+        public bool InOut { get; set; }
+
+        [JsonProperty("FacturationId")]
+        public Guid FacturationId { get; set; }
+
     }
 }
     

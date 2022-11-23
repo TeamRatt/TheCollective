@@ -303,20 +303,79 @@ namespace TheCollectiveAPI
                     CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
                     CloudTable table = cloudTableClient.GetTableReference("Scans");
 
-                    ScanEntity scanEntity = new ScanEntity()
+                    if (scan.InOut == false)
                     {
-                        MacAddress = scan.MacAddress,
-                        ScannedId = scan.ScannedId,
-                        CompanyName = scan.CompanyName,
-                        PartitionKey = scan.CompanyName,
-                        RowKey = System.Guid.NewGuid().ToString(),
-                    };
+                        Guid FacturationGuid = System.Guid.NewGuid();
+                        ScanEntity scanEntity = new ScanEntity()
+                        {
+                            MacAddress = scan.MacAddress,
+                            ScannedId = scan.ScannedId,
+                            CompanyName = scan.CompanyName,
+                            PartitionKey = scan.CompanyName,
+                            RowKey = System.Guid.NewGuid().ToString(),
+                            InOut = scan.InOut,
+                            FacturationId = FacturationGuid
+                        };
+                        TableOperation insertOperation = TableOperation.Insert(scanEntity);
+                        await table.ExecuteAsync(insertOperation);
+
+                        table = cloudTableClient.GetTableReference("Facturation");
+
+                        FactuurEntity factuurEntity = new FactuurEntity()
+                        {
+                            hoesId = scan.ScannedId,
+                            startdate = DateTime.Now,
+                            enddate = new DateTime(1601, 1, 2),
+                            PartitionKey = scan.CompanyName,
+                            RowKey = FacturationGuid.ToString(),
+                        };
+                        insertOperation = TableOperation.Insert(factuurEntity);
+                        await table.ExecuteAsync(insertOperation);
+                    }
+                    else if (scan.InOut)
+                    {
+                        table = cloudTableClient.GetTableReference("Scans");
+                        TableQuery<ScanEntity> rangeQuery = new TableQuery<ScanEntity>();
+                        rangeQuery.Where(TableQuery.GenerateFilterCondition("ScannedId", QueryComparisons.Equal, scan.ScannedId));
+                        var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
+                        queryResult.Results.Sort((b, a) => a.Timestamp.CompareTo(b.Timestamp));
+                        List<ScanEntity> lastScan = new List<ScanEntity>(queryResult.Results.Take(1));
+
+                        ScanEntity scanEntity = new ScanEntity()
+                        {
+                            MacAddress = scan.MacAddress,
+                            ScannedId = scan.ScannedId,
+                            CompanyName = scan.CompanyName,
+                            PartitionKey = scan.CompanyName,
+                            RowKey = System.Guid.NewGuid().ToString(),
+                            InOut = scan.InOut,
+                            FacturationId = lastScan[0].FacturationId
+                        };
+                        TableOperation insertOperation = TableOperation.Insert(scanEntity);
+                        await table.ExecuteAsync(insertOperation);
+
+                        table = cloudTableClient.GetTableReference("Facturation");
+
+                        TableQuery<FactuurEntity> rangeQueryFactuur = new TableQuery<FactuurEntity>();
+                        rangeQueryFactuur.Where(TableQuery.GenerateFilterCondition("hoesId", QueryComparisons.Equal, scan.ScannedId));
+                        var queryResultFactuur = await table.ExecuteQuerySegmentedAsync(rangeQueryFactuur, null);
+                        queryResultFactuur.Results.Sort((b, a) => a.Timestamp.CompareTo(b.Timestamp));
+                        List<FactuurEntity> lastFactuur = new List<FactuurEntity>(queryResultFactuur.Results.Take(1));
+
+                        lastFactuur[0].enddate = DateTime.Now;
+                        TableOperation replaceOperation = TableOperation.Replace(lastFactuur[0]);
+                        await table.ExecuteAsync(replaceOperation);
+                        return new OkObjectResult(lastFactuur[0]);
+                    }
 
 
-                    TableOperation insertOperation = TableOperation.Insert(scanEntity);
-                    await table.ExecuteAsync(insertOperation);
 
-                    return new OkObjectResult(scan);
+
+
+
+
+
+                    return new OkObjectResult("");
                 }
                 catch (Exception ex)
                 {
