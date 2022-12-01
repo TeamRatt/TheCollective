@@ -375,7 +375,7 @@ namespace TheCollectiveAPI
 
 
 
-                    return new OkObjectResult("");
+                    return new OkObjectResult(scan);
                 }
                 catch (Exception ex)
                 {
