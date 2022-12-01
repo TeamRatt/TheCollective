@@ -365,9 +365,7 @@ namespace TheCollectiveAPI
                         lastFactuur[0].enddate = DateTime.Now;
                         TableOperation replaceOperation = TableOperation.Replace(lastFactuur[0]);
                         await table.ExecuteAsync(replaceOperation);
-                        //return new OkObjectResult(lastFactuur[0]);
-                        scan.MacAddress = "";
-                        return new OkObjectResult(scan);
+                        return new OkObjectResult(lastFactuur[0]);
                     }
 
 
