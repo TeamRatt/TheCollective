@@ -244,6 +244,54 @@ namespace TheCollectiveAPI
             }
         }
 
+        //Geeft alle facturen van bedrijf X.
+        [FunctionName("GetFacturen")]
+        public async Task<IActionResult> GetFacturen(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/facturen/{companyName}")] HttpRequest req,
+            string companyName,
+            ILogger log)
+        {
+            using (HttpClient client = GetClient())
+            {
+                try
+                {
+                    string connectionString = Environment.GetEnvironmentVariable("ConnectionStringStorage");
+                    CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
+                    CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                    CloudTable table = cloudTableClient.GetTableReference("Facturation");
+
+                    TableQuery<FactuurEntity> rangeQuery = new TableQuery<FactuurEntity>();
+
+                    rangeQuery.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, companyName));
+
+
+                    var queryResult = await table.ExecuteQuerySegmentedAsync(rangeQuery, null);
+
+                    ListFactuur listFactuur = new ListFactuur()
+                    {
+                        facturen = queryResult.Results,
+                    };
+
+                    DateTime testdate = new DateTime(1601, 1, 2);
+                    List<FactuurEntity> succesfacturen = new List<FactuurEntity>();
+                    foreach (FactuurEntity factuur in listFactuur.facturen)
+                    {
+                        if (factuur.enddate != testdate)
+                        {
+                            succesfacturen.Add(factuur);
+                        }
+                    } 
+                    return new OkObjectResult(succesfacturen);
+
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.ToString());
+                    return new StatusCodeResult(500);
+                }
+            }
+        }
+
 
         //Geef alle hoezen weer.
         [FunctionName("GetCompanyNames")]
