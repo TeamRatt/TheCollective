@@ -8,6 +8,9 @@ from machine import SPI
 import urequests
 import ubinascii
 import ujson
+import json
+import time
+import gc
 
 
 MacAddress = ''
@@ -15,6 +18,9 @@ ScannedId = ''
 CompanyName = 'Howest'
 inventory = {"rdr":""}
 oldinventory = inventory
+scanapiURL = "https://thecollective.azurewebsites.net/api/v1/scans"
+inout = False
+sendEnd1 = True
 
 teller1 = 0
 
@@ -44,8 +50,8 @@ def do_connect():
     print('network config:', wlan.ifconfig())
 
 def inventoryScan():
-    
     global inventory
+    global card_id
     (stat, tag_type) = rdr.request(rdr.REQIDL)
     if stat == rdr.OK:
         (stat, raw_uid) = rdr.anticoll()
@@ -60,7 +66,7 @@ def compareInventory():
     if inventory == oldinventory:
         pass
     else:
-        if 
+        oldinventory = inventory
 
 
 do_connect()
@@ -68,28 +74,60 @@ do_connect()
 spi.init()
 rdr = MFRC522(spi=spi, gpioRst=4, gpioCs=5)
 
-inventroyScan()
+inventoryScan()
 print("Place card")
 
 while True:
-    
-    (stat, tag_type) = rdr.request(rdr.REQIDL)
-    if stat == rdr.OK:
-        (stat, raw_uid) = rdr.anticoll()
+    gc.collect()
+    response = None
+    try:
+        (stat, tag_type) = rdr.request(rdr.REQIDL)
         if stat == rdr.OK:
-            card_id = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3])
-            print(card_id)
-            
-            if card_id not in inventory:
-                inventory["rdr"] = card_id
-                post_data = ujson.dumps({ 'MacAddress': MacAddress, 'ScannedId': str(card_id), 'CompanyName': str(CompanyName)})
-                response = urequests.post("", headers = {'content-type': 'application/json'}, data = post_data).json()
-     
-     else:
-         inventory["rdr"] = ""
-         #beginnen met factureren na 5 keer niet gescand te zijn.
+            (stat, raw_uid) = rdr.anticoll()
+            if stat == rdr.OK:
+                card_id = "0x%02x%02x%02x%02x" % (raw_uid[0], raw_uid[1], raw_uid[2], raw_uid[3])
+                #print("cardid: " + card_id)
+                print(inventory.values())
+                teller1 = 0
+                
+                if card_id not in inventory.values():
+                    teller1 = 0
+                    inventory["rdr"] = card_id
+                    post_data = ujson.dumps({ 'MacAddress': MacAddress, 'ScannedId': str(card_id), 'CompanyName': str(CompanyName), 'InOut': True})
+                    print("send " + post_data)
+                    response = urequests.post("https://thecollective.azurewebsites.net/api/v1/scans", headers = {'content-type': 'application/json'}, data = post_data).json()
+                    print(response)
+                    sendEnd1 = True
+                    print("end factuur")
+                    #stoppen met factureren
+
+        elif stat != rdr.OK:
+            (stat, tag_type) = rdr.request(rdr.REQIDL)
+            if stat != rdr.OK:
+                #beginnen met factureren na 5 keer niet gescand te zijn.
+                teller1 = teller1 + 1
+                if teller1 >= 5 and sendEnd1 and inventory["rdr"] != "":
+                    #beginnen met factureren
+                    inventory["rdr"] = ""
+                    print("begin factuur")
+                    sendEnd1 = False
+                    post_data = ujson.dumps({ 'MacAddress': MacAddress, 'ScannedId': str(card_id), 'CompanyName': str(CompanyName), 'InOut': False})
+                    response = urequests.post("https://thecollective.azurewebsites.net/api/v1/scans", headers = {'content-type': 'application/json'}, data = post_data)
+                    response.close()
+                else:
+                    print("klaar")
+                    print(teller1)
+                    if teller1 >= 6:
+                        teller1 = 0
          
             
-            
+        time.sleep(1)
+    except Exception as e: # Here it catches any error.
+        if isinstance(e, OSError) and response: # If the error is an OSError the socket has to be closed.
+            response.close()
+            inventory["rdr"] = ""
+        value = {"error": e}
+        print(value)
+    gc.collect()
             
 
